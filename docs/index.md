@@ -32,14 +32,12 @@ LoadingMessage.displayName = 'LoadingMessage';
 
 ```javascript
 import React from 'react';
-import TestUtils from 'react-dom/test-utils'; // ES6
-
-import TestUtils from 'react-addons-test-utils';
+import TestUtils from 'react-dom/test-utils';
 import Component from 'root/components/utils/LoadingMessage';
 
 describe('components/utils/LoadingMessage', function () {
   it('renders the correct markup', function() {
-    const renderer = TestUtils.createRenderer();
+    const renderer = new ShallowRenderer();
     renderer.render(<Component />);
     const output = renderer.getRenderOutput();
     expect(output.type).to.equal('div');
@@ -65,7 +63,7 @@ The tests for Static Components should check that the correct behavior is execut
 ```javascript
 import React from 'react';
 import classnames from 'classnames';
-import DropdownOption from `components/utils/DropdownMenu/DropdownOption`
+import DropdownOption from 'components/utils/DropdownMenu/DropdownOption';
 
 export default class DropdownMenu extends React.Component {
   constructor() {
@@ -87,7 +85,7 @@ export default class DropdownMenu extends React.Component {
       open: this.state.isOpen
     });
     return <div className="dropdown">
-      <button className="dropdown-trigger">{triggerText}</button>
+      <button onClick={this.onTriggerClick} className="dropdown-trigger">{triggerText}</button>
       <div className={menuClasses}>
         {dropdownOptions.map(o => <DropdownOption key={o.href} {...o} />)}
       </div>
@@ -97,6 +95,54 @@ export default class DropdownMenu extends React.Component {
 
 DropdownMenu.displayName = 'DropdownMenu';
 ```
+
+`specs/components/utils/DropdownMenu/controller.spec.js`
+
+```javascript
+import React from 'react';
+import TestUtils from 'react-dom/test-utils';
+import ShallowRenderer from 'react-test-renderer/shallow'; // ES6
+import Controller from 'root/components/utils/DropdownMenu';
+
+describe('components/utils/DropdownMenu', function () {
+  it('renders the correct markup', function() {
+    const props = {
+      dropdownOptions: [{ href: '/href-1' }, { href: '/href-2' }],
+      triggerText: 'cool trigger text',
+    };
+    const renderer = new ShallowRenderer();
+    renderer.render(<Controller {...props} />);
+    const output = renderer.getRenderOutput();
+    const button = TestUtils.findRenderedComponentWithType(output, 'button');
+    expect(button.props.className).to.equal('dropdown-trigger');
+    expect(button.props.children).to.equal('cool trigger text');
+  });
+
+  describe('toggle functionality on click', function() {
+    it('toggles the open className on the menu', function() {
+      const props = {
+        dropdownOptions: [{ href: '/href-1' }, { href: '/href-2' }],
+        triggerText: 'cool trigger text',
+      };
+      const renderer = new ShallowRenderer();
+      renderer.render(<Controller {...props} />);
+
+      let output = renderer.getRenderOutput();
+      let menu = TestUtils.findRenderedDOMComponentWithClass(output, 'dropdown-menu');
+
+      const button = TestUtils.findRenderedComponentWithType(output, 'button');
+      expect(menu.className).to.equal('dropdown-menu');
+      const preventDefault = sinon.stub();
+      button.onClick({ preventDefault });
+
+      output = renderer.getRenderOutput();
+      menu = TestUtils.findRenderedDOMComponentWithClass(output, 'dropdown-menu');
+      expect(menu.className).to.equal('dropdown-menu open');
+    });  
+  });
+});
+```
+
 
 ### Connector
 
