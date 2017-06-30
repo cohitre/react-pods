@@ -35,7 +35,7 @@ import React from 'react';
 import TestUtils from 'react-dom/test-utils';
 import Component from 'root/components/utils/LoadingMessage';
 
-describe('components/utils/LoadingMessage', function () {
+describe('components/utils/LoadingMessage/component', function () {
   it('renders the correct markup', function() {
     const renderer = new ShallowRenderer();
     renderer.render(<Component />);
@@ -104,7 +104,7 @@ import TestUtils from 'react-dom/test-utils';
 import ShallowRenderer from 'react-test-renderer/shallow'; // ES6
 import Controller from 'root/components/utils/DropdownMenu';
 
-describe('components/utils/DropdownMenu', function () {
+describe('components/utils/DropdownMenu/controller', function () {
   it('renders the correct markup', function() {
     const props = {
       dropdownOptions: [{ href: '/href-1' }, { href: '/href-2' }],
@@ -143,12 +143,72 @@ describe('components/utils/DropdownMenu', function () {
 });
 ```
 
-
 ### Connector
 
 The *connector* is a function that takes a Component and connects it to the store. It maps closely to the `connect([mapStateToProps], [mapDispatchToProps], [mergeProps], [options])` method in react-redux.
 
 My preferred way to test the connector is to export each one of the argument functions and test each function independently. I have tried to test the connector function itself, but found that testing each function is good enough most of the times and it keeps the tests way simpler.
+
+#### Example
+
+`components/Contacts/ContactList/connector.js`
+
+```javascript
+import { connect } from 'react-redux';
+
+export function mapStateToProps(state, ownProps) {
+  const { query } = ownProps;
+  function isContactMatch(contact) {
+    return contact.name.indexOf(query) >= 0;
+  }
+
+  return {
+    contacts: query ? state.contacts.filter(isContactMatch) : state.contacts;
+  };
+}
+
+export default connect(mapStateToProps);
+```
+
+`spec/components/Contacts/ContactList/connector.spec.js`
+
+```javascript
+import { mapStateToProps } from 'root/components/Contacts/ContactList/connector';
+
+describe('components/Contacts/ContactList/connector', function () {
+  describe('#mapStateToProps', function() {
+    const STATE = {
+      dummyData: 'so dummy',
+      contacts: [
+        { name: 'Ned Flanders' },
+        { name: 'Tod Flanders' },
+        { name: 'Hank Hill' },
+      ],
+    };
+
+    it('returns the unfiltered contacts if no query', function() {
+      const result = mapStateToProps(STATE, {});
+      expect(result).to.deep.equal({
+        contacts: [
+          { name: 'Ned Flanders' },
+          { name: 'Tod Flanders' },
+          { name: 'Hank Hill' },
+        ],
+      });
+    });
+
+    it('filters the contacts if a query is present', function() {
+      const result = mapStateToProps(STATE, { query: 'Flanders' });
+      expect(result).to.deep.equal({
+        contacts: [
+          { name: 'Ned Flanders' },
+          { name: 'Tod Flanders' },
+        ],
+      });
+    });
+  });
+});
+```
 
 ### Example 1 - Stateless component
 
