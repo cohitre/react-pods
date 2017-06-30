@@ -1,10 +1,14 @@
 # react pods
 
-React Pods is a pattern that for organizing React components loosely inspired by my experience working with Ember applications. It defines where functionality should live and how to test it. I have successfully used this pattern in codebases with 16+ engineers in multiple time zones.
+React Pods is an organization pattern React components loosely inspired by my experience working with Ember applications. It defines where functionality should live and how to test it.
+
+Formalizing this pattern into our React application was a key factor in boosting the productivity of a team of 16+ engineers distributed through multiple time zones.
 
 ## Pods
 
 A *pod* is a way to wrap a React component to encapsulate how it is connected to the redux flow. A pod will always export only one *Component*, but the implementation of this component can be distributed through other concepts:
+
+The three core concepts inside a pod are the *Static Component*, the *Controller* and the *connector*.
 
 ### Static Component
 
@@ -25,7 +29,6 @@ export default function LoadingMessage() {
 }
 
 LoadingMessage.displayName = 'LoadingMessage';
-
 ```
 
 `specs/components/utils/LoadingMessage/component.spec.js`
@@ -210,6 +213,27 @@ describe('components/Contacts/ContactList/connector', function () {
 });
 ```
 
+### Naming conventions
+
+The import path that includes the component should end in a file named after the component:
+
+```javascript
+import ContactList from 'components/Contacts/ContactList';
+```
+
+The internals of the pod can be encapsulated in a directory with an `index.js` file:
+
+`components/Contacts/ContactList/index.js`
+
+```javascript
+import connector from './connector';
+import Controller from './controller';
+
+export default connector(Controller);
+```
+
+This naming convention allows the developers to change the internals of the ContactList component without having to change the references to it.
+
 ### Example 1 - Stateless component
 
 The simplest pod is a functional component that only renders HTML. It does not have access to the store or any state. Since there's a guarantee that this object will not grow any more complex it is ok to store it in a file named after the component.
@@ -224,7 +248,6 @@ export default function LoadingMessage() {
 }
 
 LoadingMessage.displayName = 'LoadingMessage';
-
 ```
 
 ### Example 2 - Stateless component that has potential to become more complex
